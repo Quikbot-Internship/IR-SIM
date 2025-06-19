@@ -22,7 +22,6 @@ from __future__ import division
 from irsim.lib import register_behavior
 from irsim.util.util import relative_position, WrapToPi
 import numpy as np
-from pyorca.pyorca import orca, Agent  # Make sure this matches your file structure
 from numpy import array, sqrt, copysign, dot
 from numpy.linalg import det
 from halfplaneintersect import InfeasibleError, halfplane_optimize, Line, perp
@@ -139,7 +138,7 @@ def get_avoidance_velocity(agent, collider, t, dt):
         # We're already intersecting. Pick the closest velocity to our
         # velocity that will get us out of the collision within the next
         # timestep.
-        # print("intersecting")
+        #print("intersecting")
         w = v - x/dt
         u = normalized(w) * r/dt - w
         n = normalized(w)
@@ -168,7 +167,7 @@ def beh_diff_orca(ego_object, external_objects, **kwargs):
     max_angular_vel = max_vel[1, 0]
 
     # Parameters
-    time_horizon = 3.0  # seconds to look ahead
+    time_horizon = 2.0  # seconds to look ahead
     dt = 0.1    # time step for the simulation, stated in world config files (.yaml)
     robot_radius = ego_object.radius
 
