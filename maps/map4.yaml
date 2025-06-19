@@ -1,0 +1,23 @@
+world:
+  height: 15  # the height of the world
+  width: 15   # the width of the world
+  control_mode: 'keyboard'  
+
+robot:
+  - kinematics: {name: 'diff'}  # kinematics of the robot, current name should be one of omni, diff, acker. If not set, this object will be static
+    shape: {name: 'circle', radius: 0.2}  # radius for circle shape
+    state: [1, 2, 0]  # x, y, theta, 2d position and orientation
+    goal: [12, 12, 0]  # x, y, theta, 2d position and orientation
+    behavior: {name: 'orca_avoidance'} # move toward the goal directly 
+    color: 'r' # red
+  
+  - kinematics: {name: 'diff'}  # kinematics of the robot, current name should be one of omni, diff, acker. If not set, this object will be static
+    shape: {name: 'circle', radius: 0.2}  # radius for circle shape
+    state: [5, 2, 0]  # x, y, theta, 2d position and orientation
+    goal: [14, 6, 0]  # x, y, theta, 2d position and orientation
+    behavior: {name: 'orca_avoidance'} # move toward the goal directly 
+    color: 'g' # green
+
+obstacle:
+  - shape: {name: 'circle', radius: 0.7}  # radius
+    state: [10, 10, 0]  
