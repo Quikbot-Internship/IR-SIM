@@ -1,8 +1,9 @@
 import irsim
 
-env = irsim.make('maps/map4.yaml') # initialize the environment with the configuration file
+env = irsim.make('maps/map3.yaml') # initialize the environment with the configuration file
 
-env.load_behavior("orca_behavior") # load the ORCA behavior
+#env.load_behavior("orca_behavior") 
+env.load_behavior("agent_behavior")
 
 for i in range(800): # run the simulation for 300 steps
 
