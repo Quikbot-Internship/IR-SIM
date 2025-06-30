@@ -58,6 +58,19 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
         ego_object.pp_path = [grid_to_world(p, MAP_ORIGIN, MAP_RES) 
                               for p in path_grid]
 
+        ### Plotting the path for debugging
+        xs, ys = zip(*ego_object.pp_path)
+        plt.plot(xs, ys, 'green', label='Raw')
+        plt.scatter(*start_g, c='green', label='Start')
+        plt.scatter(*goal_g, c='white', label='Goal')
+        plt.legend()
+        plt.title("Dijkstra with Path Smoothing")
+        plt.show()
+        plt.pause(5)
+        plt.close()
+        ###################
+
+
         ego_object.pp_controller = PurePursuit()
         ego_object.pp_controller.set_path(ego_object.pp_path)
 
