@@ -1,10 +1,9 @@
 import numpy as np
 import math
 
-
 # Parameters
 k = 0.3  # look forward gain
-Lfc = 4  # [m] look-ahead distance
+Lfc = 1  # [m] look-ahead distance
 #Kp = 1.0  # speed proportional gain
 dt = 0.1  # [s] time tick
 #WB = 2.9  # [m] wheel base of vehicle
@@ -66,7 +65,6 @@ class PurePursuit:
         # Search for the target point along the path
         while Lf > self.calc_distance(xc, yc, self.cx[ind], self.cy[ind]):
             if (ind + 1) >= len(self.cx):
-                #ind = len(self.cx) - 1
                 break
             else:
                 ind += 1
@@ -105,44 +103,3 @@ class PurePursuit:
         v = self.v_desired
 
         return v, omega
-'''
-    def compute_pure_pursuit_control(self, robot_pos, robot_theta):
-        # Get robot position
-        xc = robot_pos[0]
-        yc = robot_pos[1]
-        #print(robot_pos, robot_theta)
-
-        # 1. Find lookahead point (you'll need to implement this or pass it in)
-        target_point, _ = self.search_target_index(robot_pos)
-        print("Lookahead target:", self.path[target_point])
-        target_x = self.cx[target_point]
-        target_y = self.cy[target_point]
-
-        # 2. Calculate angle to lookahead (alpha)
-        x_delta = target_x - xc
-        y_delta = target_y - yc
-        #dot_product = x_delta * np.cos(robot_theta) + y_delta * np.sin(robot_theta)
-        #print("Dot product with heading:", dot_product)
-        alpha = np.arctan2(y_delta, x_delta) - robot_theta
-        alpha = np.arctan2(np.sin(alpha), np.cos(alpha))  # normalize to [-pi, pi]
-
-        # 3. Calculate distance to goal
-        L_d = np.sqrt(x_delta**2 + y_delta**2)
-
-        # 4. Calculate angular velocity (IR-SIM uses v and w)
-        omega = (2 * self.v_desired * np.sin(alpha)) / L_d
-
-        # 5. Optionally clip omega
-        #max_omega = 1.5  # rad/s or whatever is reasonable
-        #omega = np.clip(omega, -max_omega, max_omega)
-
-        # 6. Return (or assign to IR-SIM agent)
-        return self.v_desired, omega
-
-
-        # Publish messages for ROS implementation
-        #msg.drive.speed = velocity
-        #msg.drive.steering_angle = steering_angle
-        #pub.publish(msg)
-'''
-

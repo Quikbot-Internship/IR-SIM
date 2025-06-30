@@ -5,20 +5,17 @@ world:
   sample_time: 0.1
   offset: [0,0]        # real-world origin of the bottom-left of the map
   control_mode: 'auto'
-  collision_mode: 'stop'
+  collision_mode: 'unobstructed'  # 'unobstructed', 'obstructed', 'obstacle'
   obstacle_map: "map.png"        # your binary map image
   #mdownsample: 2
 
 robot:
   - kinematics: {name: 'diff'} 
-    shape: {name: 'circle', radius: 0.4}
-    state: [10, 13.75, 0, 0]
+    shape: {name: 'circle', radius: 0.3}
+    state: [10, 15, 0, 0]
     goal: [21, 18.75, 0, 0]
     vel_max: [4, 1]
     behavior: {name: 'pure_pursuit'} 
     color: 'r'
     plot:
       show_trajectory: True
-
-      # start = (150, 400)
-      #goal = (400, 150)

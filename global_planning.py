@@ -49,15 +49,6 @@ def compute_soft_costmap(occupancy_grid, robot_radius_pixels, max_extra_cost=100
     
     # Soft cost: exponential decay
     costmap = max_extra_cost * np.exp(-dist / (robot_radius_pixels / 10))
-
-    # Zero out areas far enough from obstacles
-    #costmap[dist > robot_radius_pixels] = 0
-
-    # Visualization (optional)
-    #plt.imshow(costmap, cmap='hot')
-    #plt.colorbar(label='Penalty')
-    #plt.title("Exponential Gradient Costmap")
-    #plt.show()
     print("Calculating costmap")
     return costmap
 
@@ -162,31 +153,13 @@ if __name__ == "__main__":
     goal = (420, 200)
 
     path = dijkstra(grid, start, goal)
-    print(path)
     if path:
-        print(f"Raw path length: {len(path)}")
-
-        # Step 1: Simplify
-        simplified_path = simplify_path(path, tolerance=1.0)
-        print(f"Simplified path length: {len(simplified_path)}")
-
-        # Step 2: Smooth
-        smooth = smooth_path(simplified_path, num_points=400)
-        print(f"Smoothed path length: {len(smooth)}")
-
         # Plotting
         plt.imshow(grid, cmap='gray')
         xs, ys = zip(*path)
         plt.plot(xs, ys, 'green', label='Raw')
-
-        xs, ys = zip(*simplified_path)
-        #plt.plot(xs, ys, 'blue', label='Simplified')
-
-        xs, ys = zip(*smooth)
-        #plt.plot(xs, ys, 'red', label='Smoothed')
-
         plt.scatter(*start, c='green', label='Start')
-        plt.scatter(*goal, c='black', label='Goal')
+        plt.scatter(*goal, c='white', label='Goal')
         plt.legend()
         plt.title("Dijkstra with Path Smoothing")
         plt.show()
