@@ -1,6 +1,6 @@
 world:
-  height: 28.8                         # 576 * 0.05
-  width: 31.0                          # 620 * 0.05
+  height: 31                         # 620 * 0.05
+  width: 28.8                        # 576 * 0.05
   step_time: 0.1
   sample_time: 0.1
   offset: [0,0]        # real-world origin of the bottom-left of the map
@@ -12,7 +12,7 @@ world:
 robot:
   - kinematics: {name: 'diff'} 
     shape: {name: 'circle', radius: 0.3}
-    state: [10, 15, 0, 0]
+    state: [8, 15, 0, 0]
     goal: [21, 18.75, 0, 0]
     vel_max: [4, 1]
     behavior: {name: 'pure_pursuit'} 

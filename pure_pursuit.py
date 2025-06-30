@@ -1,9 +1,9 @@
 import numpy as np
 import math
 
-# Parameters
+# Adjustable Parameters
 k = 0.3  # look forward gain
-Lfc = 1  # [m] look-ahead distance
+Lfc = 1.5  # [m] look-ahead distance
 #Kp = 1.0  # speed proportional gain
 dt = 0.1  # [s] time tick
 #WB = 2.9  # [m] wheel base of vehicle

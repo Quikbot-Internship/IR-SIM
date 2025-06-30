@@ -11,8 +11,8 @@ MAP_RES = 0.05
 # Constants
 #resolution = 0.05
 origin = (0, 0)
-grid_height = 576
-grid_width = 620
+grid_width = 576
+grid_height = 620
 
 # Convert world (meters) → grid index (pixels)
 def world_to_grid(pt, origin, resolution):
