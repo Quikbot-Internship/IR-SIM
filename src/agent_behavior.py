@@ -1,15 +1,16 @@
 import numpy as np
-from global_planning import dijkstra, lidar_to_grid
-from pure_pursuit import PurePursuit
+from path_planning.map_utils import lidar_to_grid
+from path_planning.global_planning import GlobalPlanner
+from avoidance.orca_behavior import ORCA_Planner
+from control.pure_pursuit import PurePursuit
 from irsim.lib import register_behavior
 from matplotlib import pyplot as plt
+from irsim.util.util import WrapToPi
 
 # Load your occupancy grid once (only happens on import)
 GRID = lidar_to_grid("map.png")
 MAP_ORIGIN = (0, 0)
 MAP_RES = 0.05
-# Constants
-#resolution = 0.05
 origin = (0, 0)
 grid_width = 576
 grid_height = 620
@@ -40,6 +41,18 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
     v_max = max_vel[0, 0]
     w_max = max_vel[1, 0]
     
+    # Create global planner if not already created
+    if not hasattr(ego_object, "planner"):
+        ego_object.planner = GlobalPlanner()
+
+    # Create ORCA avoiderance behavior if not already created
+    if not hasattr(ego_object, "orca_avoidance"):
+        ego_object.orca_avoidance = ORCA_Planner(
+            ego_object=ego_object,
+            external_objects=external_objects    
+        )
+
+    # If the path is not already computed, compute it
     if not hasattr(ego_object, "pp_path"):
         GRID = lidar_to_grid("map.png")
 
@@ -50,7 +63,7 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
         print(f"Start grid: {start_g}, Goal grid: {goal_g}")
 
         #Compute path using Dijkstra's algorithm
-        path_grid = dijkstra(GRID, start_g, goal_g)
+        path_grid = ego_object.planner.dijkstra(GRID, start_g, goal_g)
         if path_grid is None:
             return np.array([[0.0], [0.0]])
         
@@ -58,21 +71,20 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
         ego_object.pp_path = [grid_to_world(p, MAP_ORIGIN, MAP_RES) 
                               for p in path_grid]
 
-        ### Plotting the path for debugging
+        ### Plotting the path for debugging ######
         xs, ys = zip(*ego_object.pp_path)
         plt.plot(xs, ys, 'green', label='Raw')
         plt.scatter(*start_g, c='green', label='Start')
         plt.scatter(*goal_g, c='white', label='Goal')
         plt.legend()
         plt.title("Dijkstra with Path Smoothing")
-        plt.show()
-        plt.pause(5)
-        plt.close()
-        ###################
+        plt.draw()
+        #################################################
 
-
+        # Create PurePursuit controller
         ego_object.pp_controller = PurePursuit()
         ego_object.pp_controller.set_path(ego_object.pp_path)
+
 
     # Compute Pure Pursuit control
     v, w = ego_object.pp_controller.compute_pure_pursuit_control(
@@ -81,4 +93,13 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
 
     v = np.clip(v, 0.0, v_max)
     w = np.clip(w, -w_max, w_max)
+
+    # Convert pure pursuit to 2D velocity vector (for ORCA)
+    #pref_velocity = np.array([v * np.cos(heading), v * np.sin(heading)])
+
+    # === Step 2: ORCA correction ===
+    #return ego_object.orca_avoidance.compute_control()
+    
+
+
     return np.array([[v], [w]])

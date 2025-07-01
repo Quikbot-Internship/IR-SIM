@@ -21,7 +21,6 @@ robot:
       show_trajectory: True
 
 obstacle:
-
   - number: 10
     kinematics: {name: 'omni'}
     distribution: {name: 'random', range_low: [10, 10, -3.14], range_high: [40, 40, 3.14]}

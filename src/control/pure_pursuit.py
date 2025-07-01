@@ -2,14 +2,14 @@ import numpy as np
 import math
 
 # Adjustable Parameters
-k = 0.3  # look forward gain
-Lfc = 1.5  # [m] look-ahead distance
+k = 0.25  # look forward gain
+Lfc = .50  # [m] look-ahead distance
 #Kp = 1.0  # speed proportional gain
 dt = 0.1  # [s] time tick
 #WB = 2.9  # [m] wheel base of vehicle
 
 class PurePursuit:
-    def __init__(self, lookahead_dist=0.5, v_desired=0.45):
+    def __init__(self, lookahead_dist=0.5, v_desired=1):
         #self.lookahead_dist = lookahead_dist
         self.v_desired = v_desired
         self.path = []

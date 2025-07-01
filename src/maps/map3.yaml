@@ -1,0 +1,25 @@
+world:
+  height: 31                         # 620 * 0.05 from map.png
+  width: 28.8                        # 576 * 0.05 from map.png
+  step_time: 0.1
+  sample_time: 0.1
+  offset: [0,0]                      # real-world origin of the bottom-left of the map
+  control_mode: 'auto'
+  collision_mode: 'unobstructed'     # 'unobstructed', 'obstructed', 'obstacle'
+  obstacle_map: "map.png"            # your binary map image
+  #mdownsample: 2
+
+robot:
+  - kinematics: {name: 'diff'} 
+    shape: {name: 'circle', radius: 0.3}
+    state: [8, 15, 0, 0]
+    goal: [21, 18.75, 0, 0]
+    vel_max: [4, 1]
+    behavior: {name: 'pure_pursuit'} 
+    color: 'r'
+    plot:
+      show_trajectory: True
+
+obstacle:
+  - shape: {name: 'circle', radius: 0.4}  # radius
+    state: [10, 19, 0]  
