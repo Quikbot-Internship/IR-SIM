@@ -116,17 +116,29 @@ if __name__ == "__main__":
     start = (200, 300)
     goal = (420, 200)
 
-    path = GlobalPlanner.dijkstra(grid, start, goal)
+    planner = GlobalPlanner()
+    path = planner.dijkstra(grid, start, goal)
+
     if path:
-        # Plotting
+        # Print waypoints (grid coords)
+        print("Waypoints (grid coords):")
+        for i, (x, y) in enumerate(path):
+            print(f"{i}: ({x:.2f}, {y:.2f})")
+
+        # Plot occupancy grid and path
         plt.imshow(grid, cmap='gray')
         xs, ys = zip(*path)
-        plt.plot(xs, ys, 'green', label='Raw')
+        plt.plot(xs, ys, 'green', label='Smoothed Path')
+        plt.scatter(xs, ys, c='red', s=10, label='Waypoints')
+
+        # Label waypoints
+        #for i, (x, y) in enumerate(path):
+        #    plt.text(x, y, str(i), color='yellow', fontsize=6)
+
         plt.scatter(*start, c='green', label='Start')
         plt.scatter(*goal, c='white', label='Goal')
         plt.legend()
-        plt.title("Dijkstra with Path Smoothing")
+        plt.title("Dijkstra with Path Smoothing and Waypoints")
         plt.show()
     else:
         print("No path found")
-        

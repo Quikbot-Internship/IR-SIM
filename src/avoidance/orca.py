@@ -44,25 +44,21 @@ class Agent(object):
         self.pref_velocity = array(pref_velocity)
 
 class ORCA_Planner:
-    def __init__(self, ego_object, external_objects):
+    def __init__(self, ego_object, external_objects, time_horizon):
         """Initialize the ORCA planner."""
         self.ego_object = ego_object
         self.external_objects = external_objects
         #self.kwargs = kwargs
         self.dt =  0.1              # time step for the simulation, stated in world config files (.yaml)
-        self.time_horizon = 2.0     # seconds to look ahead
+        self.time_horizon = time_horizon     # seconds to look ahead
 
     def compute_control(self, goal):
         state = self.ego_object.state
-        goal = self.ego_object.goal
+        goal = goal
         goal_threshold = 0.75       # meters, threshold to consider "close enough" to goal
         _, max_vel = self.ego_object.get_vel_range()
         max_linear_vel = max_vel[0, 0]
         max_angular_vel = max_vel[1, 0]
-
-        #print(state)
-
-        # Parameters
         robot_radius = self.ego_object.radius
 
         # Current position and heading
@@ -108,6 +104,16 @@ class ORCA_Planner:
         for obj in self.external_objects:
             if obj.name == self.ego_object.name:
                 continue    #skip self
+
+            # Compute distance to other agent
+            distance = np.linalg.norm(np.array(obj.state[:2].flatten()) - pos)
+            combined_radius = robot_radius + obj.radius
+            max_avoid_distance = combined_radius + max_linear_vel * self.time_horizon
+
+            if distance > max_avoid_distance:
+                #print(f"Skipping agent {obj.name} at distance {distance} (max avoid distance: {max_avoid_distance})")
+                continue  # too far to worry about
+
             other_agents.append(Agent(
                 position=np.array(obj.state[:2].flatten()),
                 velocity=np.array(obj.velocity[:2].flatten()) if hasattr(obj, 'velocity') else np.zeros(2),
@@ -241,3 +247,4 @@ class ORCA_Planner:
             u = normalized(w) * r/dt - w
             n = normalized(w)
         return u, n
+    

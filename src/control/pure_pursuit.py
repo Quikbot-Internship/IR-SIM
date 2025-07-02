@@ -2,20 +2,21 @@ import numpy as np
 import math
 
 # Adjustable Parameters
-k = 0.25  # look forward gain
-Lfc = .50  # [m] look-ahead distance
+k = 0.20  # look forward gain
+Lfc = .30  # [m] look-ahead distance
 #Kp = 1.0  # speed proportional gain
 dt = 0.1  # [s] time tick
 #WB = 2.9  # [m] wheel base of vehicle
 
 class PurePursuit:
-    def __init__(self, lookahead_dist=0.5, v_desired=1):
+    def __init__(self, lookahead_dist=0.5, v_desired=0.75):
         #self.lookahead_dist = lookahead_dist
         self.v_desired = v_desired
         self.path = []
         self.cx = []
         self.cy = []
         self.old_nearest_point_index = None
+        self.current_index = 0  # Current index in the path
 
     def set_path(self, path):
         """
@@ -73,6 +74,7 @@ class PurePursuit:
 
     def compute_pure_pursuit_control(self, robot_pos, robot_theta):
         ind, Lf = self.search_target_index(robot_pos)
+        self.current_index = ind
         # Get robot position
         xc = robot_pos[0]
         yc = robot_pos[1]
@@ -103,3 +105,6 @@ class PurePursuit:
         v = self.v_desired
 
         return v, omega
+
+    def get_lookahead_point(self):
+        return self.cx[self.current_index], self.cy[self.current_index]

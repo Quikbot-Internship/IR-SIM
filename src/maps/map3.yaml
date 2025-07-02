@@ -14,7 +14,7 @@ robot:
     shape: {name: 'circle', radius: 0.3}
     state: [8, 15, 0, 0]
     goal: [21, 18.75, 0, 0]
-    vel_max: [4, 1]
+    vel_max: [0.75, 1.25]  # [linear, angular]
     behavior: {name: 'pure_pursuit'} 
     color: 'r'
     plot:
@@ -22,4 +22,4 @@ robot:
 
 obstacle:
   - shape: {name: 'circle', radius: 0.4}  # radius
-    state: [10, 19, 0]  
+    state: [12, 19, 0]  

@@ -1,7 +1,7 @@
 import numpy as np
 from path_planning.map_utils import lidar_to_grid
 from path_planning.global_planning import GlobalPlanner
-from avoidance.orca_behavior import ORCA_Planner
+from avoidance.orca import ORCA_Planner
 from control.pure_pursuit import PurePursuit
 from irsim.lib import register_behavior
 from matplotlib import pyplot as plt
@@ -37,7 +37,7 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
     pos = np.array(state[:2]).flatten()
     heading = state[2, 0]
 
-    _, max_vel = ego_object.get_vel_range()
+    _, max_vel = ego_object.get_vel_range()     # in .yaml file
     v_max = max_vel[0, 0]
     w_max = max_vel[1, 0]
     
@@ -48,8 +48,9 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
     # Create ORCA avoiderance behavior if not already created
     if not hasattr(ego_object, "orca_avoidance"):
         ego_object.orca_avoidance = ORCA_Planner(
-            ego_object=ego_object,
-            external_objects=external_objects    
+            ego_object = ego_object,
+            external_objects = external_objects,
+            time_horizon = 0.5 # seconds to look ahead    
         )
 
     # If the path is not already computed, compute it
@@ -85,6 +86,13 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
         ego_object.pp_controller = PurePursuit()
         ego_object.pp_controller.set_path(ego_object.pp_path)
 
+    if not hasattr(ego_object, "initial_heading_fixed"):
+        if len(ego_object.pp_path) > 1:
+            start_pos = ego_object.pp_path[0]
+            next_pos = ego_object.pp_path[1]
+            initial_heading = np.arctan2(next_pos[1] - start_pos[1], next_pos[0] - start_pos[0])
+            ego_object.state[2, 0] = initial_heading
+        ego_object.initial_heading_fixed = True
 
     # Compute Pure Pursuit control
     v, w = ego_object.pp_controller.compute_pure_pursuit_control(
@@ -98,8 +106,9 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
     #pref_velocity = np.array([v * np.cos(heading), v * np.sin(heading)])
 
     # === Step 2: ORCA correction ===
-    #return ego_object.orca_avoidance.compute_control()
+    lookahead_point = ego_object.pp_controller.get_lookahead_point()
+    # When needed, convert to a (3,1) goal vector
+    goal = np.array([[lookahead_point[0]], [lookahead_point[1]], [0.0]])  # 3x1 column vector
+    return ego_object.orca_avoidance.compute_control(goal)
     
-
-
     return np.array([[v], [w]])
