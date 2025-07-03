@@ -30,6 +30,7 @@ def grid_to_world(pt, origin, resolution):
     y_world = py_flipped * resolution + origin[1]
     return (x_world, y_world)
 
+# Main behavior function for Robots
 @register_behavior("diff", "pure_pursuit")
 def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
     state = ego_object.state
@@ -41,7 +42,7 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
     v_max = max_vel[0, 0]
     w_max = max_vel[1, 0]
     
-    # Create global planner if not already created
+    # Create Global Planner if not already created
     if not hasattr(ego_object, "planner"):
         ego_object.planner = GlobalPlanner()
 
@@ -50,8 +51,12 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
         ego_object.orca_avoidance = ORCA_Planner(
             ego_object = ego_object,
             external_objects = external_objects,
-            time_horizon = 0.5 # seconds to look ahead    
+            time_horizon = 1.25 # seconds to look ahead    
         )
+
+    # Create Pure Pursuit controller if not already created
+    if not hasattr(ego_object, "pp_controller"):
+        ego_object.pp_controller = PurePursuit(ego_object=ego_object)
 
     # If the path is not already computed, compute it
     if not hasattr(ego_object, "pp_path"):
@@ -72,7 +77,10 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
         ego_object.pp_path = [grid_to_world(p, MAP_ORIGIN, MAP_RES) 
                               for p in path_grid]
 
-        ### Plotting the path for debugging ######
+        # Set the path in the Pure Pursuit controller
+        ego_object.pp_controller.set_path(ego_object.pp_path)
+
+        ### PLOT PATH FOR DEBUGGING ######
         xs, ys = zip(*ego_object.pp_path)
         plt.plot(xs, ys, 'green', label='Raw')
         plt.scatter(*start_g, c='green', label='Start')
@@ -82,10 +90,8 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
         plt.draw()
         #################################################
 
-        # Create PurePursuit controller
-        ego_object.pp_controller = PurePursuit()
-        ego_object.pp_controller.set_path(ego_object.pp_path)
-
+    # Ensure robot is facing the initial heading
+    # This is only done once, when the path is first computed
     if not hasattr(ego_object, "initial_heading_fixed"):
         if len(ego_object.pp_path) > 1:
             start_pos = ego_object.pp_path[0]
@@ -99,16 +105,17 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
         robot_pos=tuple(pos), robot_theta=heading
     )
 
-    v = np.clip(v, 0.0, v_max)
-    w = np.clip(w, -w_max, w_max)
 
-    # Convert pure pursuit to 2D velocity vector (for ORCA)
-    #pref_velocity = np.array([v * np.cos(heading), v * np.sin(heading)])
-
-    # === Step 2: ORCA correction ===
+    # ORCA avoidance behavior
     lookahead_point = ego_object.pp_controller.get_lookahead_point()
-    # When needed, convert to a (3,1) goal vector
     goal = np.array([[lookahead_point[0]], [lookahead_point[1]], [0.0]])  # 3x1 column vector
-    return ego_object.orca_avoidance.compute_control(goal)
-    
+    control = ego_object.orca_avoidance.compute_control(goal)   
+
+    # Clip to robot velocity limits
+    control[0, 0] = np.clip(control[0, 0], 0.0, v_max)     # Linear velocity
+    control[1, 0] = np.clip(control[1, 0], -w_max, w_max)  # Angular velocity
+
+    # Return in original 2x1 format
+    return control
+        
     return np.array([[v], [w]])

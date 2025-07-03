@@ -1,25 +1,32 @@
 world:
-  height: 10  # the height of the world
-  width: 10   # the width of the world
-  step_time: 0.1  # 10Hz to calculate each step
-  sample_time: 0.1  # 10 Hz for render and data extraction 
-  offset: [0, 0] # the offset of the world on x and y 
+  height: 31                         # 620 * 0.05 from map.png
+  width: 28.8                        # 576 * 0.05 from map.png
+  step_time: 0.1
+  sample_time: 0.1
+  offset: [0,0]                      # real-world origin of the bottom-left of the map
+  control_mode: 'auto'
+  collision_mode: 'unobstructed'     # 'unobstructed', 'obstructed', 'obstacle'
+  obstacle_map: "map.png"            # your binary map image
+  #mdownsample: 2
 
 robot:
-  - kinematics: {name: 'diff'}  # kinematics of the robot, current name should be one of omni, diff, acker. If not set, this object will be static
-    shape: {name: 'circle', radius: 0.2}  # radius for circle shape
-    state: [1, 2, 0]  # x, y, theta, 2d position and orientation
-    goal: [9, 9, 0]  # x, y, theta, 2d position and orientation
-    behavior: {name: 'orca_avoidance'} # move toward the goal directly 
-    color: 'r' # green
-  
-  - kinematics: {name: 'diff'}  # kinematics of the robot, current name should be one of omni, diff, acker. If not set, this object will be static
-    shape: {name: 'circle', radius: 0.2}  # radius for circle shape
-    state: [1, 1, 0]  # x, y, theta, 2d position and orientation
-    goal: [9, 9, 0]  # x, y, theta, 2d position and orientation
-    behavior: {name: 'orca_avoidance'} # move toward the goal directly 
-    color: 'g' # green
+  - kinematics: {name: 'diff'} 
+    shape: {name: 'circle', radius: 0.3}
+    state: [8, 15, 0, 0]
+    goal: [21, 18.75, 0, 0]
+    vel_max: [0.75, 1.25]  # [linear, angular]
+    behavior: {name: 'pure_pursuit'} 
+    color: 'r'
+    plot:
+      show_trajectory: True
 
-obstacle:
-  - shape: {name: 'circle', radius: 0.3}  # radius
-    state: [5, 5, 0]  
+  - kinematics: {name: 'diff'} 
+    shape: {name: 'circle', radius: 0.3}
+    state: [8, 17, 0, 0]
+    goal: [10, 19, 0, 0]
+    vel_max: [0.75, 1.25]  # [linear, angular]
+    behavior: {name: 'pure_pursuit'} 
+    color: 'g'
+    plot:
+      show_trajectory: True
+

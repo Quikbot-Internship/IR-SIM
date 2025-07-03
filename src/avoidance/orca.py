@@ -66,28 +66,6 @@ class ORCA_Planner:
         heading = state[2, 0]
         current_velocity = np.array([self.ego_object.velocity[0, 0], self.ego_object.velocity[1, 0]])
 
-        # Compute distance to goal
-        dist_to_goal = np.linalg.norm(goal[:2].flatten() - pos)
-        
-        # === If very close to goal, go directly toward it ===
-        if dist_to_goal < goal_threshold:
-            pref_vel = compute_pref_velocity(pos, goal, max_linear_vel)
-            desired_heading = np.arctan2(pref_vel[1], pref_vel[0])
-            diff_heading = WrapToPi(desired_heading - heading)
-            linear_speed = np.linalg.norm(pref_vel)
-
-            if linear_speed > max_linear_vel:
-                linear_speed = max_linear_vel
-
-            if abs(diff_heading) < 0.1:
-                angular_speed = 0.0
-            else:
-                angular_speed = max_angular_vel * np.sign(diff_heading)
-            #print(np.array([[linear_speed], [angular_speed]]))
-            return np.array([[linear_speed], [angular_speed]])
-
-        # === If not close to goal, use ORCA avoidance behavior ===
-        # Preferred velocity toward goal
         pref_vel = compute_pref_velocity(pos, goal, max_linear_vel)
 
         # ORCA agent setup

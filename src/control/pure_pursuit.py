@@ -1,22 +1,26 @@
 import numpy as np
 import math
 
-# Adjustable Parameters
-k = 0.20  # look forward gain
-Lfc = .30  # [m] look-ahead distance
-#Kp = 1.0  # speed proportional gain
-dt = 0.1  # [s] time tick
-#WB = 2.9  # [m] wheel base of vehicle
 
 class PurePursuit:
-    def __init__(self, lookahead_dist=0.5, v_desired=0.75):
-        #self.lookahead_dist = lookahead_dist
-        self.v_desired = v_desired
+    def __init__(self, ego_object):
+        """ Initialize the Pure Pursuit controller."""
         self.path = []
         self.cx = []
         self.cy = []
         self.old_nearest_point_index = None
         self.current_index = 0  # Current index in the path
+        self.k = 0.30           # look forward gain
+        self.Lfc = .50          # [m] look-ahead distance
+        self.min_Lf = 0.5       # minimum look-ahead distance 
+        self.max_Lf = 1.25      # maxiumum look-ahead distance
+        #Kp = 1.0               # speed proportional gain
+        #self.dt = 0.1          # [s] time tick
+        #WB = 2.9               # [m] wheel base of vehicle
+
+        _, max_vel = ego_object.get_vel_range()     # in .yaml file
+        self.v_desired = max_vel[0, 0]
+        self.w_max = max_vel[1, 0]
 
     def set_path(self, path):
         """
@@ -60,8 +64,8 @@ class PurePursuit:
             self.old_nearest_point_index = ind
 
         # Update lookahead distance
-        Lf = k * self.v_desired + Lfc
-        Lf = max(Lf, 2.0)  # Clamp to minimum value
+        Lf = self.k * self.v_desired + self.Lfc
+        Lf = max(Lf, self.min_Lf, self.max_Lf)  # Clamp to minimum value
         
         # Search for the target point along the path
         while Lf > self.calc_distance(xc, yc, self.cx[ind], self.cy[ind]):
@@ -99,7 +103,7 @@ class PurePursuit:
         # Compute angular velocity
         K_ang = 2.0
         omega = K_ang * heading_error
-        omega = np.clip(omega, -1.5, 1.5)  # max omega (rad/s)
+        omega = np.clip(omega, -self.w_max, self.w_max)  # max omega (rad/s)
 
         # Constant or adaptive linear velocity
         v = self.v_desired

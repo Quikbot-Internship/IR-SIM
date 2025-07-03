@@ -12,9 +12,10 @@ class GlobalPlanner:
         Initialize the global planner.
         This class implements Dijkstra's algorithm for path planning on a 2D occupancy grid.
         """
-        pass
+        self.smooth_pts = 200  # Number of points for smoothing
+        self.simplify_tol = 1.0  # Tolerance for path simplification
 
-    def dijkstra(self, grid, start, goal, simplify_tol=1.0, smooth_pts=400):
+    def dijkstra(self, grid, start, goal):
         """
         Run Dijkstra's algorithm on a 2D occupancy grid.
 
@@ -48,8 +49,8 @@ class GlobalPlanner:
 
             if (x, y) == goal:
                 raw_path = self.reconstruct_path(parent, start, goal)
-                simplified = self.simplify_path(raw_path, tolerance=simplify_tol)
-                smoothed = self.smooth_path(simplified, num_points=smooth_pts)
+                simplified = self.simplify_path(raw_path, tolerance = self.simplify_tol)
+                smoothed = self.smooth_path(simplified, num_points = self.smooth_pts)
                 return smoothed
 
             for dx, dy in moves:
@@ -82,7 +83,7 @@ class GlobalPlanner:
         path.reverse()
         return path
 
-    def simplify_path(self, path, tolerance=2.0):
+    def simplify_path(self, path, tolerance):
         """Use RDP algorithm to simplify the path."""
         if len(path) < 3:
             return path
@@ -90,7 +91,7 @@ class GlobalPlanner:
         simplified = line.simplify(tolerance)
         return list(simplified.coords)
 
-    def smooth_path(self, path, num_points=200):
+    def smooth_path(self, path, num_points):
         """Fit cubic spline to path."""
         if len(path) < 2:
             return path

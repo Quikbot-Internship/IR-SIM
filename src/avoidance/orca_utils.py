@@ -1,5 +1,6 @@
 from __future__ import division
 import numpy as np
+from numpy import array
 from numpy import sqrt, dot
 
 def norm_sq(x):
@@ -14,6 +15,14 @@ def normalized(x):
 
 def dist_sq(a, b):
     return norm_sq(b - a)
+
+
+def perp(a):
+    return array((a[1], -a[0]))
+
+def norm(x):
+    return sqrt(norm_sq(x))
+
     
 def compute_pref_velocity(pos, goal, max_speed):
     direction = goal[:2].flatten() - pos

@@ -23,17 +23,15 @@
 """This module solves 2D linear programming using half-plane intersection."""
 
 from __future__ import division
-
 import itertools
 import numpy as np
 from numpy import dot, clip, array, sqrt
 from numpy.linalg import det
-
+from avoidance.orca_utils import norm_sq, normalized, dist_sq, perp, norm
 
 class InfeasibleError(RuntimeError):
     """Raised if an LP problem has no solution."""
     pass
-
 
 class Line(object):
     """A line in space."""
@@ -138,22 +136,6 @@ def line_halfplane_intersect(line, other_lines):
             # The interval is inconsistent, so the feasible region is empty.
             raise InfeasibleError
     return left_dist, right_dist
-
-def perp(a):
-    return array((a[1], -a[0]))
-
-def norm_sq(x):
-    return dot(x, x)
-
-def norm(x):
-    return sqrt(norm_sq(x))
-
-def normalized(x):
-    l = norm_sq(x)
-    if l == 0:
-        return np.zeros_like(x)  # return zero vector instead of crashing
-    return x / sqrt(l)
-
 
 if __name__ == '__main__':
     lines = [
