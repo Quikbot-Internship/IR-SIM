@@ -15,6 +15,7 @@ robot:
     state: [8, 15, 0, 0]
     goal: [21, 18.75, 0, 0]
     vel_max: [0.75, 1.25]  # [linear, angular]
+    vel_min: [0, -1.25]  # [linear, angular]
     behavior: {name: 'pure_pursuit'} 
     color: 'r'
     plot:
@@ -23,8 +24,9 @@ robot:
   - kinematics: {name: 'diff'} 
     shape: {name: 'circle', radius: 0.3}
     state: [8, 17, 0, 0]
-    goal: [10, 19, 0, 0]
+    goal: [11, 16, 0, 0]
     vel_max: [0.75, 1.25]  # [linear, angular]
+    vel_min: [0, -1.25]  # [linear, angular]
     behavior: {name: 'pure_pursuit'} 
     color: 'g'
     plot:
