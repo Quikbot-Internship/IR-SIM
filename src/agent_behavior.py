@@ -56,7 +56,7 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
 
     # Create Pure Pursuit controller if not already created
     if not hasattr(ego_object, "pp_controller"):
-        ego_object.pp_controller = PurePursuit(ego_object=ego_object)
+        ego_object.pp_controller = PurePursuit(ego_object=ego_object, external_objects=external_objects)
 
     # If the path is not already computed, compute it
     if not hasattr(ego_object, "pp_path"):
@@ -82,7 +82,7 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
 
         ### PLOT PATH FOR DEBUGGING ######
         xs, ys = zip(*ego_object.pp_path)
-        plt.plot(xs, ys, 'green', label='Raw')
+        plt.plot(xs, ys, ego_object.color, label='Raw')
         plt.scatter(*start_g, c='green', label='Start')
         plt.scatter(*goal_g, c='white', label='Goal')
         plt.legend()
@@ -117,5 +117,4 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
 
     # Return in original 2x1 format
     return control
-        
-    return np.array([[v], [w]])
+   

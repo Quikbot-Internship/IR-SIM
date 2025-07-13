@@ -45,5 +45,5 @@ def compute_soft_costmap(occupancy_grid, robot_radius_pixels, max_extra_cost=100
     
     # Soft cost: exponential decay
     costmap = max_extra_cost * np.exp(-dist / (robot_radius_pixels / 10))
-    print("Calculating costmap")
+    #print("Calculating costmap")
     return costmap

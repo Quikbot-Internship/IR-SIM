@@ -3,7 +3,7 @@ import math
 
 
 class PurePursuit:
-    def __init__(self, ego_object):
+    def __init__(self, ego_object, external_objects):
         """ Initialize the Pure Pursuit controller."""
         self.path = []
         self.cx = []
@@ -21,6 +21,7 @@ class PurePursuit:
         _, max_vel = ego_object.get_vel_range()     # in .yaml file
         self.v_desired = max_vel[0, 0]
         self.w_max = max_vel[1, 0]
+        self.external_objects = external_objects
 
     def set_path(self, path):
         """
@@ -68,7 +69,7 @@ class PurePursuit:
         Lf = max(Lf, self.min_Lf, self.max_Lf)  # Clamp to minimum value
         
         # Search for the target point along the path
-        while Lf > self.calc_distance(xc, yc, self.cx[ind], self.cy[ind]):
+        while (Lf > self.calc_distance(xc, yc, self.cx[ind], self.cy[ind])): #or not self.validate_lookahead_point(ind):
             if (ind + 1) >= len(self.cx):
                 break
             else:
@@ -110,5 +111,18 @@ class PurePursuit:
 
         return v, omega
 
+    def validate_lookahead_point(self, idx):
+        """Ensure the lookahead point is not occupied."""
+        for obj in self.external_objects:
+            if obj.name.startswith('robot'):
+                radius = obj.radius
+                obj_x, obj_y = obj.state[0], obj.state[1]
+                lookahead_x, lookahead_y = self.cx[idx], self.cy[idx]
+                distance = np.hypot(lookahead_x - obj_x, lookahead_y - obj_y)
+
+                if distance < radius:
+                    return False
+        return True
+    
     def get_lookahead_point(self):
         return self.cx[self.current_index], self.cy[self.current_index]
