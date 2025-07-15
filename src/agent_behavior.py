@@ -51,7 +51,7 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
         ego_object.orca_avoidance = ORCA_Planner(
             ego_object = ego_object,
             external_objects = external_objects,
-            time_horizon = 1.25 # seconds to look ahead    
+            time_horizon = 0.5 # seconds to look ahead    
         )
 
     # Create Pure Pursuit controller if not already created
@@ -101,10 +101,11 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
         ego_object.initial_heading_fixed = True
 
     # Compute Pure Pursuit control
-    v, w = ego_object.pp_controller.compute_pure_pursuit_control(
-        robot_pos=tuple(pos), robot_theta=heading
-    )
+    #v, w = ego_object.pp_controller.compute_pure_pursuit_control(
+    #    robot_pos=tuple(pos), robot_theta=heading
+    #)
 
+    ind, _ = ego_object.pp_controller.search_target_index(robot_pos=pos)
 
     # ORCA avoidance behavior
     lookahead_point = ego_object.pp_controller.get_lookahead_point()

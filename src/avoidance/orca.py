@@ -25,6 +25,7 @@ from numpy import array, sqrt, copysign, dot
 from numpy.linalg import det
 from avoidance.halfplaneintersect import InfeasibleError, halfplane_optimize, Line, perp
 from avoidance.orca_utils import norm_sq, normalized, dist_sq, compute_pref_velocity
+from simulation_globals import robot_states_last_step
 
 # Method:
 # For each robot A and potentially colliding robot B, compute smallest change
@@ -78,30 +79,34 @@ class ORCA_Planner:
             pref_velocity= self.pref_vel
         )
 
-        # Other agents setup
         other_agents = []
         for obj in self.external_objects:
-            #print(f"Processing object {obj.name} with state {obj.state} and velocity {getattr(obj, 'velocity', None)}")
             if obj.name == self.ego_object.name:
-                continue    #skip self
+                continue  # skip self
+
+            last = robot_states_last_step.get(obj.name)
+            if last is None:
+                continue  # no snapshot available
+
+            position_other = np.array(last['position']).flatten()
+            velocity_other = np.array(last['velocity']).flatten()
             
+            #print(f"Object {obj.name} position: {position_other}, velocity: {velocity_other}")
+
             # Compute distance to other agent
-            distance = np.linalg.norm(np.array(obj.state[:2].flatten()) - pos)
+            distance = np.linalg.norm(position_other - pos)
             combined_radius = robot_radius + obj.radius
             max_avoid_distance = 0.1 + combined_radius + max_linear_vel * self.time_horizon
 
             if distance > max_avoid_distance or not obj.name.startswith('robot'):
-                #print(f"Skipping agent {obj.name} at distance {distance} (max avoid distance: {max_avoid_distance})")
                 continue  # too far to worry about
-            #print(f"Adding agent {obj.name} at distance {distance} (max avoid distance: {max_avoid_distance}) velocity: {getattr(obj, 'velocity', None)}")
-            
+
             other_agents.append(Agent(
-                position=np.array(obj.state[:2].flatten()),
-                velocity=np.array(obj.velocity[:2].flatten()) if hasattr(obj, 'velocity') else np.zeros(2),
+                position=position_other,
+                velocity=velocity_other,
                 radius=obj.radius,
                 max_speed=max_linear_vel,
-                pref_velocity = obj.velocity[:2].flatten() if hasattr(obj, 'velocity') else np.zeros(2)
-                #pref_velocity=np.zeros(2)
+                pref_velocity=velocity_other  # can still use other's velocity as their pref
             ))
 
         # Get new velocity via ORCA
@@ -109,9 +114,10 @@ class ORCA_Planner:
             new_vel, _ = self.orca(ego_agent, other_agents)
         except InfeasibleError:
             # No feasible velocity: stand still (zero velocity)
+            print("Infeasible ORCA solution, standing still.")
             new_vel = np.zeros(2)
 
-        #if self.ego_object.color == 'r':
+        #if self.ego_object.color == 'b':
         #    print(f'preferred velocity: {self.pref_vel}')
         #    print(f'orca velocity: {new_vel}')
         

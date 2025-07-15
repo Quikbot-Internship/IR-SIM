@@ -69,12 +69,13 @@ class PurePursuit:
         Lf = max(Lf, self.min_Lf, self.max_Lf)  # Clamp to minimum value
         
         # Search for the target point along the path
-        while (Lf > self.calc_distance(xc, yc, self.cx[ind], self.cy[ind])): #or not self.validate_lookahead_point(ind):
+        while (Lf > self.calc_distance(xc, yc, self.cx[ind], self.cy[ind])) or not self.validate_lookahead_point(ind):
             if (ind + 1) >= len(self.cx):
                 break
             else:
                 ind += 1
-
+                
+        self.current_index = ind
         return ind, Lf
 
     def compute_pure_pursuit_control(self, robot_pos, robot_theta):
