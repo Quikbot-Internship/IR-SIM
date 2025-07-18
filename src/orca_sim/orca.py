@@ -63,6 +63,8 @@ class ORCA_RVOPlanner:
         for obj in self.external_objects:
             if obj.name == self.ego_object.name:
                 continue
+            if not obj.name.startswith('robot'):
+                continue  # Skip other robots in this planner
 
             # Get the last snapshot of the robot state
             # This assumes robot_states_last_step is a dictionary with robot names as keys

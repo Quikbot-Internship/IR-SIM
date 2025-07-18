@@ -4,7 +4,7 @@ from PIL import Image
 from simulation_globals import robot_states_last_step
 import cv2
 
-env = irsim.make('maps/map4.yaml') # initialize the environment with the configuration file
+env = irsim.make('maps/map3.yaml') # initialize the environment with the configuration file
 env.load_behavior("agent_behavior")
 
 for i in range(1500): # run the simulation for 300 steps
