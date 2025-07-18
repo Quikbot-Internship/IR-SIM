@@ -2,6 +2,7 @@ import numpy as np
 from path_planning.map_utils import lidar_to_grid
 from path_planning.global_planning import GlobalPlanner
 from avoidance.orca import ORCA_Planner
+from orca_sim.orca import ORCA_RVOPlanner
 from control.pure_pursuit import PurePursuit
 from irsim.lib import register_behavior
 from matplotlib import pyplot as plt
@@ -48,10 +49,15 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
 
     # Create ORCA avoiderance behavior if not already created
     if not hasattr(ego_object, "orca_avoidance"):
-        ego_object.orca_avoidance = ORCA_Planner(
-            ego_object = ego_object,
-            external_objects = external_objects,
-            time_horizon = 0.5 # seconds to look ahead    
+        # ego_object.orca_avoidance = ORCA_Planner(
+        #     ego_object = ego_object,
+        #     external_objects = external_objects,
+        #     time_horizon = 0.9 # seconds to look ahead    
+        # )
+        ego_object.orca_avoidance = ORCA_RVOPlanner(
+            ego_object=ego_object,
+            external_objects=external_objects,
+            time_horizon=0.9  # seconds to look ahead
         )
 
     # Create Pure Pursuit controller if not already created
@@ -68,12 +74,12 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
         goal_g = world_to_grid(goal_pt, MAP_ORIGIN, MAP_RES)
         print(f"Start grid: {start_g}, Goal grid: {goal_g}")
 
-        #Compute path using Dijkstra's algorithm
+        # Compute path using Dijkstra's algorithm
         path_grid = ego_object.planner.dijkstra(GRID, start_g, goal_g)
         if path_grid is None:
             return np.array([[0.0], [0.0]])
         
-        #Assign path to ego_object
+        # Assign path to ego_object
         ego_object.pp_path = [grid_to_world(p, MAP_ORIGIN, MAP_RES) 
                               for p in path_grid]
 
@@ -100,17 +106,15 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
             ego_object.state[2, 0] = initial_heading
         ego_object.initial_heading_fixed = True
 
-    # Compute Pure Pursuit control
-    #v, w = ego_object.pp_controller.compute_pure_pursuit_control(
-    #    robot_pos=tuple(pos), robot_theta=heading
-    #)
-
+    
+    # Compute lookahead point and update the Pure Pursuit controller
     ind, _ = ego_object.pp_controller.search_target_index(robot_pos=pos)
 
     # ORCA avoidance behavior
     lookahead_point = ego_object.pp_controller.get_lookahead_point()
     goal = np.array([[lookahead_point[0]], [lookahead_point[1]], [0.0]])  # 3x1 column vector
-    control = ego_object.orca_avoidance.compute_control(goal)   
+    #control = ego_object.orca_avoidance.compute_control(goal)  
+    control = ego_object.orca_avoidance.compute_control(goal) 
 
     # Clip to robot velocity limits
     control[0, 0] = np.clip(control[0, 0], 0.0, v_max)     # Linear velocity

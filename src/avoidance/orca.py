@@ -78,7 +78,7 @@ class ORCA_Planner:
             max_speed=max_linear_vel,
             pref_velocity= self.pref_vel
         )
-
+        repulsion_vec = np.zeros(2)  # default no repulsion
         other_agents = []
         for obj in self.external_objects:
             if obj.name == self.ego_object.name:
@@ -88,38 +88,78 @@ class ORCA_Planner:
             if last is None:
                 continue  # no snapshot available
 
-            position_other = np.array(last['position']).flatten()
-            velocity_other = np.array(last['velocity']).flatten()
+            pos_other = np.array(last['position']).flatten()
+            vel_other = np.array(last['velocity']).flatten()
             
             #print(f"Object {obj.name} position: {position_other}, velocity: {velocity_other}")
 
             # Compute distance to other agent
-            distance = np.linalg.norm(position_other - pos)
+            distance = np.linalg.norm(pos_other - pos)
             combined_radius = robot_radius + obj.radius
             max_avoid_distance = 0.1 + combined_radius + max_linear_vel * self.time_horizon
 
             if distance > max_avoid_distance or not obj.name.startswith('robot'):
                 continue  # too far to worry about
 
+        
+
+            # Check if we should apply repulsion
+            apply_repulsion = self.should_apply_repulsion(
+                pos=pos,
+                vel=self.pref_vel,
+                other_pos=pos_other,
+                other_vel=vel_other,
+                threshold=max_avoid_distance,
+                angle_tolerance_deg=40,  # adjustable
+                use_angle_filter=True
+            )
+
+            # If repulsion is needed, compute the repulsion vector and apply to self.robot
+            repulsion_vec = np.zeros(2)  # default no repulsion
+            if apply_repulsion:
+                diff = pos - pos_other               # vector from other to self
+                dist = np.linalg.norm(diff) + 1e-5  # avoid div by zero
+                diff_unit = diff / dist              # normalize
+
+                # Perpendicular vectors (left and right)
+                perp_left = np.array([-diff_unit[1], diff_unit[0]])
+                perp_right = np.array([diff_unit[1], -diff_unit[0]])
+
+                # Choose direction for side repulsion:
+                # For example, always push left (or you can pick based on your robot's heading)
+                repulsion_dir = perp_left
+
+                # Magnitude inversely proportional to distance squared (like before)
+                magnitude = 1 / (dist**2)
+
+                # Final repulsion vector pointing sideways
+                repulsion_vec = repulsion_dir * magnitude
+                print(f"Applying repulsion to {obj.name} at distance {dist:.2f} m with vector {repulsion_vec}")
+                #self.pref_vel = repulsion_vec  # apply repulsion to preferred velocity
+            else:
+                #pref_velocity = self.pref_vel  # use global desired pref_vel
+                repulsion_vec = np.zeros(2)  # no repulsion needed
+
             other_agents.append(Agent(
-                position=position_other,
-                velocity=velocity_other,
+                position=pos_other,
+                velocity=vel_other,
                 radius=obj.radius,
                 max_speed=max_linear_vel,
-                pref_velocity=velocity_other  # can still use other's velocity as their pref
+                pref_velocity = vel_other  # can still use other's velocity as their pref
             ))
 
         # Get new velocity via ORCA
         try:
-            new_vel, _ = self.orca(ego_agent, other_agents)
+            new_vel, _ = self.orca(ego_agent, other_agents) 
+            new_vel += repulsion_vec
         except InfeasibleError:
             # No feasible velocity: stand still (zero velocity)
             print("Infeasible ORCA solution, standing still.")
             new_vel = np.zeros(2)
 
-        #if self.ego_object.color == 'b':
-        #    print(f'preferred velocity: {self.pref_vel}')
-        #    print(f'orca velocity: {new_vel}')
+        if self.ego_object.color == 'g':
+            print(f'preferred velocity: {self.pref_vel}')
+            print(f'orca velocity: {new_vel}')
         
         return omni_to_diff(heading, [new_vel[0], new_vel[1]], max_angular_vel)
         
@@ -174,7 +214,7 @@ class ORCA_Planner:
 
         x = -(agent.position - collider.position)
         v = agent.velocity - collider.velocity
-        r = agent.radius + collider.radius
+        r = (agent.radius + collider.radius)
         t = self.time_horizon
         dt = self.dt
 
@@ -228,3 +268,35 @@ class ORCA_Planner:
             n = normalized(w)
         return u, n
     
+    def should_apply_repulsion(self, pos, vel, other_pos, other_vel, threshold, angle_tolerance_deg, use_angle_filter=True):
+        """
+        Determines whether repulsion should be applied based on:
+        - Distance threshold
+        - Whether the other agent is approaching
+        - Optional heading alignment check (angle tolerance)
+        """
+        pos = np.array(pos)
+        vel = np.array(vel)
+        other_pos = np.array(other_pos)
+        other_vel = np.array(other_vel)
+
+        # Distance check
+        diff = other_pos - pos
+        dist = np.linalg.norm(diff)
+
+        # Check if other agent is approaching
+        approaching = np.dot(other_vel, diff) < 0
+        if not approaching:
+            return False
+        print("Approaching other agent, distance:", dist)
+
+        if use_angle_filter:
+            # Check heading alignment
+            robot_heading = vel / (np.linalg.norm(vel) + 1e-5)
+            diff_dir = diff / (dist + 1e-5)
+            angle = np.arccos(np.clip(np.dot(robot_heading, diff_dir), -1.0, 1.0)) * 180 / np.pi
+            print(f"Angle to agent: {angle:.2f}° (tolerance: {angle_tolerance_deg}°)")
+            if angle > angle_tolerance_deg:
+                print("REJECTED: not aligned")
+                return False
+        return True
