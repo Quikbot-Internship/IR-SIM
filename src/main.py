@@ -10,17 +10,17 @@ env.load_behavior("agent_behavior")
 for i in range(1500): # run the simulation for 300 steps
     print(f'step #{i}')
 
-    # Phase 1: Snapshot all robot states
-    robot_states_last_step.clear()
-    for robot in env.robot_list:
-        robot_states_last_step[robot.name] = {
-            'position': robot.state[:2].copy(),
-            'velocity': getattr(robot, 'velocity', np.zeros((2,1))).copy()
-        }
+    # # Phase 1: Snapshot all robot states
+    # robot_states_last_step.clear()
+    # for robot in env.robot_list:
+    #     robot_states_last_step[robot.name] = {
+    #         'position': robot.state[:2].copy(),
+    #         'velocity': getattr(robot, 'velocity', np.zeros((2,1))).copy()
+    #     }
 
     env.step()  # update the environment
     env.render() # render the environment
-    input()
+    # input()
     if env.done(): 
         break
 env.end() # close the environment

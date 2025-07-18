@@ -3,7 +3,7 @@ from orca_sim.Vector2 import Vector2
 import numpy as np
 from orca_sim.Vector2 import Vector2
 from avoidance.orca_utils import compute_pref_velocity
-from irsim.util.util import WrapToPi, omni_to_diff
+from irsim.util.util import WrapToPi, omni_to_diff, diff_to_omni
 from simulation_globals import robot_states_last_step
 
 class ORCA_RVOPlanner:
@@ -31,6 +31,14 @@ class ORCA_RVOPlanner:
         #print("Computing control for ORCA_RVO Planner")
         self.sim.clear()  # Clear previous state
 
+        robot_name = ''
+        if self.ego_object.color == 'g':
+            robot_name = 'Green-robot'
+        elif self.ego_object.color == 'r':
+            robot_name = 'Red-robot'
+        elif self.ego_object.color == 'b':
+            robot_name = 'Blue-robot'
+
         goal = goal
         _, max_vel = self.ego_object.get_vel_range()
         max_linear_vel = max_vel[0, 0]
@@ -40,13 +48,14 @@ class ORCA_RVOPlanner:
         # Build preferred velocity
         pos = np.array(self.ego_object.state[:2]).flatten()
         heading = self.ego_object.state[2, 0]
-        vel = np.array([self.ego_object.velocity[0, 0], self.ego_object.velocity[1, 0]])
-
+        # vel = np.array([self.ego_object.velocity[0, 0], self.ego_object.velocity[1, 0]])
+        vel = diff_to_omni(heading, self.ego_object.velocity)
+        print(f'{robot_name} current velocity: {vel.flatten()}')
         # Add ego agent
         ego_id = self.sim.addAgent(
             position=Vector2(*pos),
-            velocity=Vector2(*vel),
-            neighborDist=robot_radius * 5.0,
+            velocity=Vector2(vel[0, 0], vel[1, 0]),
+            neighborDist=robot_radius * 10.0,
             maxNeighbors=10,
             timeHorizon=self.time_horizon,
             timeHorizonObst=self.time_horizon,
@@ -65,20 +74,20 @@ class ORCA_RVOPlanner:
                 continue
             if not obj.name.startswith('robot'):
                 continue  # Skip other robots in this planner
-
             # Get the last snapshot of the robot state
             # This assumes robot_states_last_step is a dictionary with robot names as keys
-            last = robot_states_last_step.get(obj.name)
-            if last is None:
-                continue  # no snapshot available
+            # last = robot_states_last_step.get(obj.name)
+            # if last is None:
+            #     continue  # no snapshot available
 
-            other_pos = np.array(last['position']).flatten()
-            other_vel = np.array(last['velocity']).flatten()
-
+            # other_pos = np.array(last['position']).flatten()
+            # other_vel = np.array(last['velocity']).flatten()
+            other_heading = obj.state[2, 0]
+            other_vel = diff_to_omni(other_heading, obj.velocity)
             self.sim.addAgent(
-                position=Vector2(*other_pos),
-                velocity=Vector2(*other_vel),
-                neighborDist=obj.radius * 5.0,        # or customize as needed
+                position=Vector2(obj.state[0, 0], obj.state[1, 0]),
+                velocity=Vector2(other_vel[0, 0], other_vel[1, 0]),
+                neighborDist=obj.radius * 10.0,        # or customize as needed
                 maxNeighbors=10,
                 timeHorizon=self.time_horizon,
                 timeHorizonObst=self.time_horizon,
@@ -92,8 +101,7 @@ class ORCA_RVOPlanner:
         # Get ego's new velocity
         new_vel = self.sim.getAgentVelocity(ego_id)
 
-        if self.ego_object.color == 'g':
-            print(f'preferred velocity: {self.sim.getAgentPrefVelocity(ego_id)}')
-            print(f'orca velocity: {[new_vel.x_, new_vel.y_]}\n')
+        print(f'{robot_name} preferred velocity: {self.sim.getAgentPrefVelocity(ego_id)}')
+        print(f'{robot_name} orca velocity: {[new_vel.x_, new_vel.y_]}\n')
 
         return omni_to_diff(heading, [new_vel.x_, new_vel.y_], max_angular_vel)
