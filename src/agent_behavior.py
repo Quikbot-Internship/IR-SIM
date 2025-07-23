@@ -1,12 +1,12 @@
 import numpy as np
 from path_planning.map_utils import lidar_to_grid
 from path_planning.global_planning import GlobalPlanner
-from avoidance.orca import ORCA_Planner
+#from avoidance.orca import ORCA_Planner
 from orca_sim.orca import ORCA_RVOPlanner
 from control.pure_pursuit import PurePursuit
 from irsim.lib import register_behavior
 from matplotlib import pyplot as plt
-from irsim.util.util import WrapToPi
+
 
 # Load your occupancy grid once (only happens on import)
 GRID = lidar_to_grid("map.png")
@@ -34,10 +34,10 @@ def grid_to_world(pt, origin, resolution):
 # Main behavior function for Robots
 @register_behavior("diff", "pure_pursuit")
 def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
+    print(f"Running behavior for {ego_object.name} with color {ego_object.color}")
     state = ego_object.state
     goal = ego_object.goal
     pos = np.array(state[:2]).flatten()
-    heading = state[2, 0]
 
     _, max_vel = ego_object.get_vel_range()     # in .yaml file
     v_max = max_vel[0, 0]
@@ -49,15 +49,10 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
 
     # Create ORCA avoiderance behavior if not already created
     if not hasattr(ego_object, "orca_avoidance"):
-        # ego_object.orca_avoidance = ORCA_Planner(
-        #     ego_object = ego_object,
-        #     external_objects = external_objects,
-        #     time_horizon = 0.9 # seconds to look ahead    
-        # )
         ego_object.orca_avoidance = ORCA_RVOPlanner(
             ego_object=ego_object,
             external_objects=external_objects,
-            time_horizon=0.9  # seconds to look ahead
+            time_horizon=3.5  # seconds to look ahead
         )
 
     # Create Pure Pursuit controller if not already created
@@ -113,7 +108,7 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
     # ORCA avoidance behavior
     lookahead_point = ego_object.pp_controller.get_lookahead_point()
     goal = np.array([[lookahead_point[0]], [lookahead_point[1]], [0.0]])  # 3x1 column vector
-    #control = ego_object.orca_avoidance.compute_control(goal)  
+     
     control = ego_object.orca_avoidance.compute_control(goal) 
 
     # Clip to robot velocity limits

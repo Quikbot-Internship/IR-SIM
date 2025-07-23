@@ -15,8 +15,8 @@ robot:
     shape: {name: 'circle', radius: 0.3}
     state: [8, 15, 0, 0]
     goal: [21, 18.75, 0, 0]
-    vel_max: [0.75, 2]  # [linear, angular]
-    vel_min: [0, -2]  # [linear, angular]
+    vel_max: [0.75, 3]  # [linear, angular]
+    vel_min: [0, -3]  # [linear, angular]
     behavior: {name: 'pure_pursuit'} 
     color: 'r'
     plot:
@@ -27,8 +27,8 @@ robot:
     shape: {name: 'circle', radius: 0.3}
     state: [8, 16, 0, 0]
     goal: [11, 16, 0, 0]
-    vel_max: [0.75, 2]  # [linear, angular]
-    vel_min: [0, -2]  # [linear, angular]
+    vel_max: [0.75, 3]  # [linear, angular]
+    vel_min: [0, -3]  # [linear, angular]
     behavior: {name: 'pure_pursuit'} 
     color: 'g'
     plot:
@@ -39,8 +39,8 @@ robot:
     shape: {name: 'circle', radius: 0.3}
     state: [9.5, 22, 0, 0]
     goal: [7, 13, 0, 0]
-    vel_max: [0.75, 2]  # [linear, angular]
-    vel_min: [0, -2]  # [linear, angular]
+    vel_max: [0.75, 3]  # [linear, angular]
+    vel_min: [0, -3]  # [linear, angular]
     behavior: {name: 'pure_pursuit'} 
     color: 'b'
     plot:

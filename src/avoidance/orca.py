@@ -19,12 +19,12 @@
 # SOFTWARE.
 
 from __future__ import division
-from irsim.util.util import WrapToPi, omni_to_diff
+from irsim.util.util import omni_to_diff
 import numpy as np
 from numpy import array, sqrt, copysign, dot
 from numpy.linalg import det
 from avoidance.halfplaneintersect import InfeasibleError, halfplane_optimize, Line, perp
-from avoidance.orca_utils import norm_sq, normalized, dist_sq, compute_pref_velocity
+from orca_sim.orca_utils import norm_sq, normalized, dist_sq, compute_pref_velocity
 from simulation_globals import robot_states_last_step
 
 # Method:
