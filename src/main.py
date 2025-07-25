@@ -2,7 +2,7 @@ import irsim
 import numpy as np
 from simulation_globals import robot_states_last_step
 
-env = irsim.make('maps/map4.yaml') # initialize the environment with the configuration file
+env = irsim.make('maps/map5.yaml') # initialize the environment with the configuration file
 env.load_behavior("agent_behavior")
 
 for i in range(1500): # run the simulation for 300 steps

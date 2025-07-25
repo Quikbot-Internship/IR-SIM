@@ -1,35 +1,20 @@
 import numpy as np
 from path_planning.map_utils import lidar_to_grid
 from path_planning.global_planning import GlobalPlanner
-#from avoidance.orca import ORCA_Planner
+from lidar.lidar_processer import Lidar_Processer
 from orca_sim.orca import ORCA_RVOPlanner
-from control.pure_pursuit import PurePursuit
+from pp_control.pure_pursuit import PurePursuit
 from irsim.lib import register_behavior
 from matplotlib import pyplot as plt
+from coodinate_grid_utils import world_to_grid, grid_to_world
 
-
-# Load your occupancy grid once (only happens on import)
+# Global constants
 GRID = lidar_to_grid("map.png")
 MAP_ORIGIN = (0, 0)
 MAP_RES = 0.05
 origin = (0, 0)
 grid_width = 576
 grid_height = 620
-
-# Convert world (meters) → grid index (pixels)
-def world_to_grid(pt, origin, resolution):
-    xg = int((pt[0] - origin[0]) / resolution)
-    yg_unflipped = int((pt[1] - origin[1]) / resolution)
-    yg = grid_height - 1 - yg_unflipped  # Flip y to match image coordinates
-    return (xg, yg)
-
-# Convert grid index (pixels) → world (meters)
-def grid_to_world(pt, origin, resolution):
-    px, py = pt
-    py_flipped = grid_height - 1 - py  # Invert y index to world convention
-    x_world = px * resolution + origin[0]
-    y_world = py_flipped * resolution + origin[1]
-    return (x_world, y_world)
 
 # Main behavior function for Robots
 @register_behavior("diff", "pure_pursuit")
@@ -64,9 +49,9 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
         GRID = lidar_to_grid("map.png")
 
         # Convert start and goal to grid indices
-        start_g = world_to_grid(pos, MAP_ORIGIN, MAP_RES)
+        start_g = world_to_grid(pos, MAP_ORIGIN, MAP_RES, grid_height=grid_height)
         goal_pt = goal[:2].flatten()
-        goal_g = world_to_grid(goal_pt, MAP_ORIGIN, MAP_RES)
+        goal_g = world_to_grid(goal_pt, MAP_ORIGIN, MAP_RES, grid_height=grid_height)
         print(f"Start grid: {start_g}, Goal grid: {goal_g}")
 
         # Compute path using Dijkstra's algorithm
@@ -75,7 +60,7 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
             return np.array([[0.0], [0.0]])
         
         # Assign path to ego_object
-        ego_object.pp_path = [grid_to_world(p, MAP_ORIGIN, MAP_RES) 
+        ego_object.pp_path = [grid_to_world(p, MAP_ORIGIN, MAP_RES, grid_height) 
                               for p in path_grid]
 
         # Set the path in the Pure Pursuit controller
@@ -101,7 +86,14 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
             ego_object.state[2, 0] = initial_heading
         ego_object.initial_heading_fixed = True
 
-    
+    # Create Lidar processer if not already created
+    if not hasattr(ego_object, "lidar_processer"):
+        ego_object.lidar_processer = Lidar_Processer(ego_object=ego_object)
+
+    # Process Lidar points to get obstacles
+    #obstacles = ego_object.lidar_processer.process_lidar(ego_object.get_lidar_points())
+    #plot_map_with_obstacles("map.png", obstacles, origin=(0, 0), resolution=0.05)
+   
     # Compute lookahead point and update the Pure Pursuit controller
     ind, _ = ego_object.pp_controller.search_target_index(robot_pos=pos)
 
@@ -109,7 +101,7 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
     lookahead_point = ego_object.pp_controller.get_lookahead_point()
     goal = np.array([[lookahead_point[0]], [lookahead_point[1]], [0.0]])  # 3x1 column vector
      
-    control = ego_object.orca_avoidance.compute_control(goal) 
+    control = ego_object.orca_avoidance.compute_control(goal, obstacles=[]) 
 
     # Clip to robot velocity limits
     control[0, 0] = np.clip(control[0, 0], 0.0, v_max)     # Linear velocity
@@ -117,4 +109,28 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
 
     # Return in original 2x1 format
     return control
-   
+
+
+# def plot_map_with_obstacles(map_img, obstacles, origin, resolution):
+#     """
+#     map_img: 2D np.array (e.g., 0=free, 255=wall)
+#     obstacles: list of np.ndarray (Mx2 in meters)
+#     origin: (x0, y0) of map in world coords
+#     resolution: meters per pixel
+#     """
+#     grid_height = 620
+#     from PIL import Image
+#     map_img = np.array(Image.open("map.png").convert("L"))  # 'L' = graysca
+#     plt.figure(figsize=(8, 8))
+#     plt.imshow(map_img, cmap='gray', origin='upper')
+
+#     for obs in obstacles:
+#         grid_pts = np.array([grid_to_world(p, origin, resolution, grid_height) for p in obs])
+#         grid_pts = np.vstack([grid_pts, grid_pts[0]])  # close the polygon
+#         plt.plot(grid_pts[:, 0], grid_pts[:, 1], 'r-', linewidth=2)
+#         plt.fill(grid_pts[:, 0], grid_pts[:, 1], color='red', alpha=0.2)
+
+#     plt.title("Map with Obstacles")
+#     plt.grid(False)
+#     plt.axis('equal')
+#     plt.show()

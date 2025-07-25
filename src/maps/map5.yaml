@@ -1,0 +1,40 @@
+world:
+  height: 31                         # 620 * 0.05 from map.png
+  width: 28.8                        # 576 * 0.05 from map.png
+  step_time: 0.1
+  sample_time: 0.1
+  offset: [0,0]                      # real-world origin of the bottom-left of the map
+  control_mode: 'auto'
+  collision_mode: 'unobstructed'     # 'unobstructed', 'obstructed', 'obstacle'
+  obstacle_map: "map.png"            # your binary map image
+  mdownsample: 2
+
+robot:
+  - kinematics: {name: 'diff'} 
+    name: 'robot1'
+    shape: {name: 'circle', radius: 0.3}
+    state: [8, 15, 0, 0]
+    goal: [9, 20, 0, 0]
+    vel_max: [0.75, 3]  # [linear, angular]
+    vel_min: [0, -3]  # [linear, angular]
+    behavior: {name: 'pure_pursuit'} 
+    color: 'r'
+    plot:
+      show_trajectory: True
+
+    sensors:
+      - name: 'lidar2d'
+        range_min: 0
+        range_max: 2
+        angle_range: 3.14 #  4.7123
+        number: 100
+        noise: False
+        std: 0.1
+        angle_std: 0.2
+        offset: [0, 0, 0]
+        alpha: 0.3
+
+
+obstacle:
+  - shape: {name: 'circle', radius: 0.4}  # radius
+    state: [9, 17.5, 0]  

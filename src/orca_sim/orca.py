@@ -6,6 +6,7 @@ from orca_sim.orca_utils import compute_pref_velocity
 from irsim.util.util import WrapToPi, omni_to_diff, diff_to_omni
 from simulation_globals import robot_states_last_step
 
+
 class ORCA_RVOPlanner:
     def __init__(self, ego_object, external_objects, time_horizon):
         self.sim = RVOSimulator(timeStep=0.1)
@@ -26,9 +27,16 @@ class ORCA_RVOPlanner:
             velocity=Vector2(0.0, 0.0)
         )
 
-    def compute_control(self, goal):
-        self.sim.clear()  # Clear previous state
+    def add_obstacles(self, obstacles):
+        #self.sim.clear_obstacles()  # Clear previous obstacles
+        for obs in obstacles:
+            print(f"Adding obstacle: {obs}")
+            vec_obs = [Vector2(x, y) for x, y in obs]
+            obs_id = self.sim.addObstacle(vec_obs)
 
+    def compute_control(self, goal, obstacles):
+        self.sim.clear()  # Clear previous state
+        self.add_obstacles(obstacles)
         robot_name = ''
         if self.ego_object.color == 'g':
             robot_name = 'Green-robot'

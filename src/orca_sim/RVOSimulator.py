@@ -52,6 +52,9 @@ class RVOSimulator:
         self.agent_new_velocities_ = []
     # ... reset other relevant internal members ...
 
+    def clear_obstacles(self):
+        self.obstacles_ = []
+
     def setTimeStep(self, timeStep):
         self.timeStep_ = timeStep
 
