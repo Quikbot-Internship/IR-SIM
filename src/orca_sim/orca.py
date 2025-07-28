@@ -27,16 +27,19 @@ class ORCA_RVOPlanner:
             velocity=Vector2(0.0, 0.0)
         )
 
-    def add_obstacles(self, obstacles):
+    def add_all_obstacles(self, obstacles):
         #self.sim.clear_obstacles()  # Clear previous obstacles
         for obs in obstacles:
             print(f"Adding obstacle: {obs}")
             vec_obs = [Vector2(x, y) for x, y in obs]
             obs_id = self.sim.addObstacle(vec_obs)
+            print(f"Obstacle added with ID: {obs_id}")
 
     def compute_control(self, goal, obstacles):
         self.sim.clear()  # Clear previous state
-        self.add_obstacles(obstacles)
+        self.add_all_obstacles(obstacles)
+        self.sim.processObstacles()
+
         robot_name = ''
         if self.ego_object.color == 'g':
             robot_name = 'Green-robot'

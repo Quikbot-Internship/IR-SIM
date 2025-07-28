@@ -91,8 +91,8 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
         ego_object.lidar_processer = Lidar_Processer(ego_object=ego_object)
 
     # Process Lidar points to get obstacles
-    #obstacles = ego_object.lidar_processer.process_lidar(ego_object.get_lidar_points())
-    #plot_map_with_obstacles("map.png", obstacles, origin=(0, 0), resolution=0.05)
+    obstacles = ego_object.lidar_processer.process_lidar(ego_object.get_lidar_points())
+    
    
     # Compute lookahead point and update the Pure Pursuit controller
     ind, _ = ego_object.pp_controller.search_target_index(robot_pos=pos)
@@ -100,8 +100,9 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
     # ORCA avoidance behavior
     lookahead_point = ego_object.pp_controller.get_lookahead_point()
     goal = np.array([[lookahead_point[0]], [lookahead_point[1]], [0.0]])  # 3x1 column vector
-     
-    control = ego_object.orca_avoidance.compute_control(goal, obstacles=[]) 
+    
+    # ORCA step, pass in the goal and obstacles
+    control = ego_object.orca_avoidance.compute_control(goal=goal, obstacles=obstacles) 
 
     # Clip to robot velocity limits
     control[0, 0] = np.clip(control[0, 0], 0.0, v_max)     # Linear velocity
@@ -109,28 +110,3 @@ def beh_diff_pure_pursuit(ego_object, external_objects, **kwargs):
 
     # Return in original 2x1 format
     return control
-
-
-# def plot_map_with_obstacles(map_img, obstacles, origin, resolution):
-#     """
-#     map_img: 2D np.array (e.g., 0=free, 255=wall)
-#     obstacles: list of np.ndarray (Mx2 in meters)
-#     origin: (x0, y0) of map in world coords
-#     resolution: meters per pixel
-#     """
-#     grid_height = 620
-#     from PIL import Image
-#     map_img = np.array(Image.open("map.png").convert("L"))  # 'L' = graysca
-#     plt.figure(figsize=(8, 8))
-#     plt.imshow(map_img, cmap='gray', origin='upper')
-
-#     for obs in obstacles:
-#         grid_pts = np.array([grid_to_world(p, origin, resolution, grid_height) for p in obs])
-#         grid_pts = np.vstack([grid_pts, grid_pts[0]])  # close the polygon
-#         plt.plot(grid_pts[:, 0], grid_pts[:, 1], 'r-', linewidth=2)
-#         plt.fill(grid_pts[:, 0], grid_pts[:, 1], color='red', alpha=0.2)
-
-#     plt.title("Map with Obstacles")
-#     plt.grid(False)
-#     plt.axis('equal')
-#     plt.show()

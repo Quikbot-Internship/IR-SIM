@@ -38,3 +38,6 @@ robot:
 obstacle:
   - shape: {name: 'circle', radius: 0.4}  # radius
     state: [9, 17.5, 0]  
+  
+  - shape: {name: 'circle', radius: 0.2}  # radius
+    state: [8.8, 16, 0]  
